@@ -1,4 +1,4 @@
-"EPITHELIOME" Simulation Project
+"EPITHELIOME" Project
 
 Modelling and Simulation of Complex Biological Systems
 
