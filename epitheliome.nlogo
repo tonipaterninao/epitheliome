@@ -11,6 +11,8 @@ turtles-own [
   dv          ;; the growing rate (differential of volume)
   p-bonded    ;; determines the probability of a cell to bond to the substrate
   bonded?     ;; determines whether a cell is bonded to the substrate
+  spreaded?   ;; determines whether a cell spreaded in the current iteration
+  sep         ;; separation with other cells
   cycle-stage ;; determines at which stage of the cell cycle the cell is
               ;; G0 = 0 / G1 = 1 / S-G2 = 3 / M = 4
   cycle-len   ;; length of the cell cycle (in ticks)
@@ -42,7 +44,7 @@ to setup
   
   ;; Set up the cell's properties
   
-  create-turtles 3 [setxy random-xcor random-ycor]
+  create-turtles n-turtles [setxy random-xcor random-ycor]
   
   ask turtles[
     set shape "circle"
@@ -52,16 +54,8 @@ to setup
     ;; scaling the size to 1:10
     set size 2 * radius / 10
     
-    ;; setting cell cycle length
-    ifelse (CELL-TYPE = "keranocyte")[
-    set cycle-len 120
-    ]
-    [ set cycle-len 30]
-    
-    ;; determine G1 phase length
-    set g1-len random-normal (cycle-len / 2) (cycle-len / 20)
-    ;; update the new cell cycle length
-    set cycle-len 2 * g1-len
+    ;; setting cell cycle and G1 phase length
+    compute-cycle
     
     ;;set volume and compute dv
     set volume 4 / 3 * pi * radius ^ 3
@@ -80,6 +74,11 @@ to setup
 end
 
 to go
+  ask turtles[
+    set spreaded? false
+  ]
+    
+  ;; determine whether the turtle bond to substrate  
   ask turtles[
     if (not bonded?)[
       set p-bonded random 101
@@ -165,14 +164,19 @@ to go
           ;; divide
           set volume volume / 2                            ;; reduce the volume by half
           set radius ( volume * 3 / (4 * pi) ) ^ ( 1 / 3 ) ;; update radius
+          set s-radius radius                              ;; update apparent radius
           set cycle-stage 1                                ;; update cell cycle phase
           set i 0                                          ;; restart counter
           set bonded? false                                ;; restart bonding to substrate
           
+          ;; re-compute cell cycle length
+          compute-cycle
+          
           ;;create 2nd daughter cell
           hatch 1 [
            rt random 361
-           fd 2 * radius / 10 ;; take into the account the scaled radius
+           fd 2 * s-radius / 10 ;; take into the account the scaled radius
+           compute-cycle
           ]
                     
         ]
@@ -189,6 +193,15 @@ to go
     
   ]
   
+  ;; physical correction (avoid overlap)
+  
+  ask turtles[
+    
+    ;; identify potentially overlapping cells
+    set sep distance other turtles
+    
+  ]
+  
   ;; update turtles shape according to growth and spreading
   ask turtles [
     set size 2 * s-radius / 10
@@ -199,20 +212,26 @@ end
 
 ;; procedure that increases radius by cell spreading
 
-to spread[cell]
-  ask cell[
-    
+to compute-cycle
+  ifelse (CELL-TYPE = "keranocyte")[
+    set cycle-len 120
   ]
+  [set cycle-len 30]
+  
+  ;; determine G1 phase length
+  set g1-len random-normal (cycle-len / 2) (cycle-len / 20)
+  ;; update the new cell cycle length
+  set cycle-len 2 * g1-len
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
 789
 10
-1281
-523
-16
-16
-14.61
+1287
+550
+30
+30
+3.92
 1
 10
 1
@@ -222,10 +241,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--16
-16
--16
-16
+-30
+30
+-30
+30
 0
 0
 1
@@ -270,10 +289,10 @@ CELL-TYPE
 0
 
 BUTTON
-279
-140
-342
-173
+424
+95
+487
+128
 Go
 go
 T
@@ -285,6 +304,21 @@ NIL
 NIL
 NIL
 1
+
+SLIDER
+39
+186
+211
+219
+n-turtles
+n-turtles
+1
+10
+1
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
