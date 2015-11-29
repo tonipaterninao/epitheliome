@@ -192,20 +192,39 @@ to go
     ]
     
   ]
-  
-  ;; physical correction (avoid overlap)
-  
+
   ask turtles[
     
     ;; identify potentially overlapping cells
-    set sep distance other turtles
+    let self-radius s-radius
+    ask turtles with [distance myself < self-radius + s-radius][
+      ifelse (s-radius > self-radius)[
+        fd self-radius - s-radius
+      ]
+      [ fd s-radius - self-radius ]
+    ]
     
-  ]
+  ]  
   
   ;; update turtles shape according to growth and spreading
   ask turtles [
     set size 2 * s-radius / 10
     set label cycle-stage
+  ]
+  
+    ;; physical correction (avoid overlap)
+  
+  ask turtles[
+    
+    ;; identify potentially overlapping cells
+    let self-radius s-radius
+    ask other turtles in-radius ((self-radius + s-radius) / 10)[
+      ifelse (s-radius > self-radius)[
+        fd ((self-radius - s-radius) / 10)
+      ]
+      [ fd ((s-radius - self-radius) / 10) ]
+    ]
+    
   ]
   tick
 end
@@ -227,11 +246,11 @@ end
 GRAPHICS-WINDOW
 789
 10
-1287
-550
+1279
+521
 30
 30
-3.92
+7.87
 1
 10
 1
