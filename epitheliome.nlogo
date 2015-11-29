@@ -226,10 +226,10 @@ to go
       if (distance this-cell < ((s-radius + self-radius) / 10))[
         face this-cell
         ifelse (self-radius < s-radius)[
-          fd ((self-radius - s-radius) / 10)
+          fd (distance this-cell - ((self-radius + s-radius) / 10))
         ]
       
-        [ fd ((s-radius - self-radius) / 10) ]
+        [ fd (distance this-cell - ((self-radius + s-radius) / 10)) ]
       ]
     ]
     
