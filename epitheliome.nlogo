@@ -217,12 +217,20 @@ to go
   ask turtles[
     
     ;; identify potentially overlapping cells
-    let self-radius s-radius
-    ask other turtles in-radius ((self-radius + s-radius) / 10)[
-      ifelse (s-radius > self-radius)[
-        fd ((self-radius - s-radius) / 10)
+    let self-radius s-radius  ;; current turtle's radius
+    let this-cell self        ;; current turtle itself
+    ask other turtles[
+      print distance this-cell
+      print s-radius / 10
+      print self-radius / 10
+      if (distance this-cell < ((s-radius + self-radius) / 10))[
+        face this-cell
+        ifelse (self-radius < s-radius)[
+          fd ((self-radius - s-radius) / 10)
+        ]
+      
+        [ fd ((s-radius - self-radius) / 10) ]
       ]
-      [ fd ((s-radius - self-radius) / 10) ]
     ]
     
   ]
