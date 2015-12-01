@@ -207,13 +207,26 @@ to go
     let self-radius s-radius  ;; current turtle's radius
     let this-cell self        ;; current turtle itself
     ask other turtles[
-      if (distance this-cell < ((s-radius + self-radius) / 10))[
-        ifelse (distance max-pxcor > s-radius or distance max-pycor > s-radius)[
-          face this-cell
-          fd (distance this-cell - ((self-radius + s-radius) / 10))
-        ]
+      let d distance this-cell ;; distance between the current cell and the other cell
+
+      ;; if cells overlap
+      if (d < ((s-radius + self-radius) / 10))[
+
+        ;; if cell is not by the edge of the medium
+        ifelse (can-move? s-radius)
         [
-          face patch-at xcor max-pycor
+          ;; move away from current cell until no overlap
+          face this-cell
+          fd (d - ((self-radius + s-radius) / 10))
+        ]
+
+        ;; if other cell is by the edge of the medium, ask current cell to move instead
+        [
+          let other-cell self
+          ask this-cell[
+            face other-cell
+            fd (d - ((self-radius + s-radius) / 10))
+          ]
         ]
 
       ]
