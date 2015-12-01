@@ -23,62 +23,62 @@ turtles-own [
   max-div     ;; the number of maximun divisions
   i           ;; internal counter
 ]
-  
+
 
 
 
 to setup
   ca
   reset-ticks
-  
+
   ;; Change the medium color according to calcium concentration
-  
+
   ask patches[
     ifelse(extracel-calcium = "Low")[
       set cal 49
     ]
     [ set cal 45]
-    
+
     set pcolor cal
   ]
-  
+
   ;; Set up the cell's properties
-  
+
   create-turtles n-turtles [setxy random-xcor random-ycor]
-  
+
   ask turtles[
     set shape "circle"
     set radius 20
     set s-radius radius
-    
+
     ;; scaling the size to 1:10
     set size 2 * radius / 10
-    
+
     ;; setting cell cycle and G1 phase length
     compute-cycle
-    
+
     ;;set volume and compute dv
     set volume 4 / 3 * pi * radius ^ 3
     set dv volume / (2 * g1-len)
-    
+
     set bonded? false
     set p-bonded 0
-    
+
     set cycle-stage 1
     set i 0
-    
-    set label-color 0 
+
+    set label-color 0
     set label cycle-stage
   ]
-  
+
 end
 
 to go
   ask turtles[
     set spreaded? false
   ]
-    
-  ;; determine whether the turtle bond to substrate  
+
+  ;; determine whether the turtle bond to substrate
   ask turtles[
     if (not bonded?)[
       set p-bonded random 101
@@ -88,7 +88,7 @@ to go
       [set bonded? false]
     ]
   ]
-  
+
   ask turtles[
     ;; apoptosis if cell is not bonded by the end of G1
     ifelse (not bonded?) [
@@ -96,22 +96,22 @@ to go
         die
       ]
     ]
-    
+
     ;; cell is bonded to substrate
     ;; update cycle phase
     [
       ;; cell is in G0
       if (cycle-stage = 0) [
-        
+
         ;; if bonds are broken or sufficiently spread enter G1
         if (n-bonded < 4 or s-radius / radius >= 1.5)[
           set cycle-stage 1
         ]
       ]
-      
+
       ;; cell is in G1
       if (cycle-stage = 1) [
-        
+
         ;; increase cell volume and update counter
         set volume volume + dv
         ;; update radius for shape update
@@ -120,29 +120,29 @@ to go
         set s-radius s-radius + dr
         ;; update counter
         set i i + 1
-        
+
         ;; G1/G2 boundary
          if (i > g1-len) [
           set cycle-stage 2
         ]
-        
+
         ;; G0/G1 checkpoint
         if (i > g1-len / 2) [
-          
+
           ;; if contact inhibited or not sufficiently spread
           ;; enter G0
           if (n-bonded > 4 or s-radius / radius < 1.5) [
             set cycle-stage 0
           ]
         ]
-       
+
       ]
-      
+
       ;; cell is in G2/S phase
       if (cycle-stage = 2) [
         ;; increment internal counter
         set i i + 1
-        
+
         ;; if G2/M boundary
         if (i > 0.8 * cycle-len)[
           set cycle-stage 3   ;; update cycle phase
@@ -151,16 +151,16 @@ to go
           ask my-links[die]
         ]
       ]
-      
+
       ;; cell is in M phase
       if (cycle-stage = 3) [
-        
+
         ;;increment counter
         set i i + 1
-        
+
         ;; if reached the end of cycle
         if (i > cycle-len)[
-          
+
           ;; divide
           set volume volume / 2                            ;; reduce the volume by half
           set radius ( volume * 3 / (4 * pi) ) ^ ( 1 / 3 ) ;; update radius
@@ -168,71 +168,57 @@ to go
           set cycle-stage 1                                ;; update cell cycle phase
           set i 0                                          ;; restart counter
           set bonded? false                                ;; restart bonding to substrate
-          
+
           ;; re-compute cell cycle length
           compute-cycle
-          
+
           ;;create 2nd daughter cell
           hatch 1 [
            rt random 361
            fd 2 * s-radius / 10 ;; take into the account the scaled radius
            compute-cycle
           ]
-                    
+
         ]
       ]
     ]
   ]
-  
+
   ;; spread only if spread radius is less than 1.5X radius and not in mitotic state
   ask turtles[
-    
+
     if (s-radius / radius < 1.5 and cycle-stage != 3 and bonded?)[
       set s-radius s-radius + 1
     ]
-    
+
   ]
 
-  ask turtles[
-    
-    ;; identify potentially overlapping cells
-    let self-radius s-radius
-    ask turtles with [distance myself < self-radius + s-radius][
-      ifelse (s-radius > self-radius)[
-        fd self-radius - s-radius
-      ]
-      [ fd s-radius - self-radius ]
-    ]
-    
-  ]  
-  
   ;; update turtles shape according to growth and spreading
   ask turtles [
     set size 2 * s-radius / 10
     set label cycle-stage
   ]
-  
+
     ;; physical correction (avoid overlap)
-  
+
   ask turtles[
-    
+
     ;; identify potentially overlapping cells
     let self-radius s-radius  ;; current turtle's radius
     let this-cell self        ;; current turtle itself
     ask other turtles[
-      print distance this-cell
-      print s-radius / 10
-      print self-radius / 10
       if (distance this-cell < ((s-radius + self-radius) / 10))[
-        face this-cell
-        ifelse (self-radius < s-radius)[
+        ifelse (distance max-pxcor > s-radius or distance max-pycor > s-radius)[
+          face this-cell
           fd (distance this-cell - ((self-radius + s-radius) / 10))
         ]
-      
-        [ fd (distance this-cell - ((self-radius + s-radius) / 10)) ]
+        [
+          face patch-at xcor max-pycor
+        ]
+
       ]
     ]
-    
+
   ]
   tick
 end
@@ -244,7 +230,7 @@ to compute-cycle
     set cycle-len 120
   ]
   [set cycle-len 30]
-  
+
   ;; determine G1 phase length
   set g1-len random-normal (cycle-len / 2) (cycle-len / 20)
   ;; update the new cell cycle length
@@ -690,7 +676,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.2.0
+NetLogo 5.2.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
