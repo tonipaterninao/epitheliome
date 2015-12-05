@@ -52,7 +52,7 @@ to setup
     set s-radius radius
 
     ;; scaling the size to 1:10
-    set size 2 * radius / 10
+    set size 2 * radius / 50
 
     ;; setting cell cycle and G1 phase length
     compute-cycle
@@ -175,7 +175,7 @@ to go
           ;;create 2nd daughter cell
           hatch 1 [
            rt random 361
-           fd 2 * s-radius / 10 ;; take into the account the scaled radius
+           fd 2 * s-radius / 50 ;; take into the account the scaled radius
            compute-cycle
           ]
 
@@ -195,7 +195,7 @@ to go
 
   ;; update turtles shape according to growth and spreading
   ask turtles [
-    set size 2 * s-radius / 10
+    set size 2 * s-radius / 50
     set label cycle-stage
   ]
 
@@ -210,14 +210,14 @@ to go
       let d distance this-cell ;; distance between the current cell and the other cell
 
       ;; if cells overlap
-      if (d < ((s-radius + self-radius) / 10))[
+      if (d < ((s-radius + self-radius) / 50))[
 
         ;; if cell is not by the edge of the medium
         ifelse (can-move? s-radius)
         [
           ;; move away from current cell until no overlap
           face this-cell
-          fd (d - ((self-radius + s-radius) / 10))
+          fd (d - ((self-radius + s-radius) / 50))
         ]
 
         ;; if other cell is by the edge of the medium, ask current cell to move instead
@@ -225,7 +225,7 @@ to go
           let other-cell self
           ask this-cell[
             face other-cell
-            fd (d - ((self-radius + s-radius) / 10))
+            fd (d - ((self-radius + s-radius) / 50))
           ]
         ]
 
@@ -278,10 +278,10 @@ ticks
 30.0
 
 CHOOSER
-32
-41
-241
-86
+40
+42
+249
+87
 extracel-calcium
 extracel-calcium
 "Low" "Physiological"
@@ -305,10 +305,10 @@ NIL
 1
 
 CHOOSER
-34
-109
-172
-154
+40
+110
+178
+155
 CELL-TYPE
 CELL-TYPE
 "keranocyte" "urothelial"
@@ -340,7 +340,7 @@ n-turtles
 n-turtles
 1
 10
-1
+7
 1
 1
 NIL
