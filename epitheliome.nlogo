@@ -28,7 +28,7 @@ turtles-own [
   i           ;; internal counter
 ]
 
-
+;;breed[edge edges ]
 
 
 to setup
@@ -61,7 +61,7 @@ to setup
     set s-radius radius
 
     ;; scaling the size to 1:10
-    set size 2 * radius / 50
+    set size 2 * radius / scale
 
     ;; setting cell cycle and G1 phase length
     compute-cycle
@@ -110,7 +110,7 @@ to go
       if (cycle-stage = 0) [
 
         ;; if bonds are broken or sufficiently spread enter G1
-        if (n-bonded < 4 or s-radius / radius >= 1.5)[
+        if (count my-links < 4 or s-radius / radius >= 1.5)[
           set cycle-stage 1
         ]
       ]
@@ -137,7 +137,7 @@ to go
 
           ;; if contact inhibited or not sufficiently spread
           ;; enter G0
-          if (n-bonded > 4 or s-radius / radius < 1.5) [
+          if (count my-links > 4 or s-radius / radius < 1.5) [
             set cycle-stage 0
           ]
         ]
@@ -181,7 +181,7 @@ to go
           ;;create 2nd daughter cell
           hatch 1 [
            rt random 361
-           fd 2 * s-radius / 50 ;; take into the account the scaled radius
+           fd 2 * s-radius / scale ;; take into the account the scaled radius
            compute-cycle
           ]
 
@@ -201,11 +201,10 @@ to go
 
   ;; update turtles shape according to growth and spreading
   ask turtles [
-    set size 2 * s-radius / 50
+    set size 2 * s-radius / scale
     set label cycle-stage
   ]
-
-    ;; physical correction (avoid overlap)
+;; physical correction (avoid overlap)
 
   ask turtles[
 
@@ -216,14 +215,14 @@ to go
       let d distance this-cell ;; distance between the current cell and the other cell
 
       ;; if cells overlap
-      if (d < ((s-radius + self-radius) / 50))[
+      if (d < ((s-radius + self-radius) / scale))[
 
-        ;; if cell is not by the edge of the medium
-        ifelse (can-move? s-radius)
+        ;; if cell is not by the edge of the medium or has any links
+        ifelse (can-move? (s-radius / scale) and count my-links = 0)
         [
           ;; move away from current cell until no overlap
           face this-cell
-          fd (d - ((self-radius + s-radius) / 50))
+          fd (d - ((self-radius + s-radius) / scale))
         ]
 
         ;; if other cell is by the edge of the medium, ask current cell to move instead
@@ -231,49 +230,61 @@ to go
           let other-cell self
           ask this-cell[
             face other-cell
-            fd (d - ((self-radius + s-radius) / 50))
+            fd (d - ((self-radius + s-radius) / scale))
           ]
         ]
 
       ]
     ]
-
-  ]
-  
+  ]  
   ;; Cell bonding
   
   ask turtles[
     
     ;; Probability constant calculation within 10 um
-    let this-cell self
+
+    let this-cell self ;; the current cell
+    let this-s-radius s-radius ;; the spread radius of current cell
     
     ;; Trigger bonding calculations if current cell is not in mitotic phase
-    if (cycle-stage != 4)[
-    
-      ask other turtles in-radius ( 10 / 50 )[
+    if (cycle-stage != 3)[
+      
+      ;; Look for turtles in the vicinities
+      ask other turtles in-radius ((s-radius + s-radius + 10) / scale )[
         
-        ;; if cells are not already bonded and ot in mitotic phase
-        
-        if ((link self this-cell != nobody) and (cycle-satge != 4))[
+        ;; if distance between cells is less than 1à um -- taking into account their radius'
+        if (distance self <= (this-s-radius + s-radius + 10) / scale)[
           
-          ;; Probability based on Baumgarter et al. (2000)
+          ;; if cells are not already bonded and ot in mitotic phase
           
-          let b-probability ( 1 / ( 1 + ( exp ( -5 * ( ex-cal - 1 ) ) ) ) )
-          
-          let threshold random-float 1
-          
-          ;; If constant is greater than random number      
-          if (b-probability > threshold)[
+          if ((not any? my-links with [end1 = this-cell or end2 = this-cell]) and (cycle-stage != 3))[
             
-            ;; create a bond between both cells
-            create-link 
+            ;; Probability based on Baumgarter et al. (2000)
+            ;; with steepness = 5
+            ;; inflexion point = 1 mM
+            ;; maximum = 1
             
+            let b-probability ( 1 / ( 1 + ( exp ( -5 * ( ex-cal - 1 ) ) ) ) )         
+            let threshold random-float 1
+            
+            ;; If constant is greater than random number      
+            if (b-probability > threshold)[
+              
+              ;; create a bond between both cells
+              create-link-with this-cell
+            ]
           ]
         ]
       ]
+      
+      ;; Create bonds with edges of the world
+;      if (xcor >= max-pxcor or ycor >= max-pycor)[
+;        
+;        create-link-with patch-here
+;      ]
     ]
   ]
-  
+
   tick
 end
 
@@ -381,10 +392,25 @@ n-turtles
 n-turtles
 1
 10
-7
+5
 1
 1
 NIL
+HORIZONTAL
+
+SLIDER
+45
+247
+217
+280
+scale
+scale
+1
+100
+49
+1
+1
+μm
 HORIZONTAL
 
 @#$#@#$#@
