@@ -1,3 +1,7 @@
+globals[
+  ex-cal ; the extra-cellular calcium concentration in mM
+]
+
 patches-own [
   cal ; The extra-cellular calcium concentration as color code
 ]
@@ -30,6 +34,11 @@ turtles-own [
 to setup
   ca
   reset-ticks
+  
+  ifelse( extracel-calcium = "Low")[
+    set ex-cal 0.09
+  ]
+  [ set ex-cal 2.00 ]
 
   ;; Change the medium color according to calcium concentration
 
@@ -74,9 +83,6 @@ to setup
 end
 
 to go
-  ask turtles[
-    set spreaded? false
-  ]
 
   ;; determine whether the turtle bond to substrate
   ask turtles[
@@ -233,6 +239,41 @@ to go
     ]
 
   ]
+  
+  ;; Cell bonding
+  
+  ask turtles[
+    
+    ;; Probability constant calculation within 10 um
+    let this-cell self
+    
+    ;; Trigger bonding calculations if current cell is not in mitotic phase
+    if (cycle-stage != 4)[
+    
+      ask other turtles in-radius ( 10 / 50 )[
+        
+        ;; if cells are not already bonded and ot in mitotic phase
+        
+        if ((link self this-cell != nobody) and (cycle-satge != 4))[
+          
+          ;; Probability based on Baumgarter et al. (2000)
+          
+          let b-probability ( 1 / ( 1 + ( exp ( -5 * ( ex-cal - 1 ) ) ) ) )
+          
+          let threshold random-float 1
+          
+          ;; If constant is greater than random number      
+          if (b-probability > threshold)[
+            
+            ;; create a bond between both cells
+            create-link 
+            
+          ]
+        ]
+      ]
+    ]
+  ]
+  
   tick
 end
 
@@ -689,7 +730,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.2.1
+NetLogo 5.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
