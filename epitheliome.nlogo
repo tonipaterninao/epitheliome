@@ -22,10 +22,10 @@ turtles-own [
   cycle-len   ;; length of the cell cycle (in ticks)
               ;; 120 for keranocyte / 30 for utothelial
   g1-len      ;; length of G1 stage
-  n-neighbours ;; the number of neighbours within a 0.5*radius distance
   n-bonded    ;; the number of establihed bonds
   max-div     ;; the number of maximun divisions
   i           ;; internal counter
+  migrate     ;; the migration distance calcullated for an unbound cell
 ]
 
 ;;breed[edge edges ]
@@ -283,6 +283,22 @@ to go
 ;        create-link-with patch-here
 ;      ]
     ]
+  ]
+  
+  ;; cell migration: concerns only cells bound to substrate and with no
+  ;; intercellular bonds  
+  
+  ask turtles with [bonded? = 1 and count my-links = 0][
+
+    let turn? random 2 ;; whether the cell will alter it's straight-line trajectory
+    if (turn?)[
+      lt 60
+    ]
+    
+    set migrate 2.5 * s-radius
+      
+      
+    
   ]
 
   tick
