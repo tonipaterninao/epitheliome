@@ -88,7 +88,7 @@ to go
   ask turtles[
     if (not bonded?)[
       set p-bonded random 101
-      ifelse( p-bonded > 10 ) [
+      ifelse( p-bonded > 50 ) [
         set bonded? true
       ]
       [set bonded? false]
@@ -202,9 +202,43 @@ to go
   ;; update turtles shape according to growth and spreading
   ask turtles [
     set size 2 * s-radius / scale
-    set label cycle-stage
+    set label count my-links
   ]
-;; physical correction (avoid overlap)
+  
+    ;; cell migration: concerns only cells bound to substrate and with no
+  ;; intercellular bonds  
+  
+  ask turtles with [bonded? and count my-links = 0][
+
+    let turn? random 101 ;; whether the cell will alter it's straight-line trajectory
+    if (turn? > 80)[
+      rt -30 + random 61
+    ]
+    
+    set migrate 2.5 * s-radius / scale
+    
+    let n 0 ;; counter for the while loop of changing direction 
+    
+    ;; if cell cannot move the "migrate" distance
+    while [not can-move? migrate][
+      lt 30
+      set n n + 1
+      
+      ; if cell turns 10 times without being able to move, remain stationary
+      if (n = 10)[
+        set migrate 0
+        stop
+      ]
+    ]        
+  ]
+  
+  
+  ;; cell migration after distance calculation and direction modification
+  ask turtles with [bonded? and count my-links = 0][
+    fd migrate
+  ]
+  
+  ;; physical correction (avoid overlap)
 
   ask turtles[
 
@@ -241,7 +275,7 @@ to go
   
   ask turtles[
     
-    ;; Probability constant calculation within 10 um
+    ;; Probability constant calculation within 10 µm
 
     let this-cell self ;; the current cell
     let this-s-radius s-radius ;; the spread radius of current cell
@@ -252,8 +286,8 @@ to go
       ;; Look for turtles in the vicinities
       ask other turtles in-radius ((s-radius + s-radius + 10) / scale )[
         
-        ;; if distance between cells is less than 1à um -- taking into account their radius'
-        if (distance self <= (this-s-radius + s-radius + 10) / scale)[
+        ;; if distance between cells is less than 10 µm -- taking into account their radius'
+        ifelse (distance self <= (this-s-radius + s-radius + 10) / scale)[
           
           ;; if cells are not already bonded and ot in mitotic phase
           
@@ -275,6 +309,13 @@ to go
             ]
           ]
         ]
+        
+        ;; if distance is greater than 10 µm and there is a link between the cells, break it
+        [
+          if (any? my-links with [end1 = this-cell or end2 = this-cell])[
+            ask my-links with [other-end = this-cell][ die ]
+          ]
+        ]
       ]
       
       ;; Create bonds with edges of the world
@@ -282,25 +323,11 @@ to go
 ;        
 ;        create-link-with patch-here
 ;      ]
+
     ]
   ]
   
-  ;; cell migration: concerns only cells bound to substrate and with no
-  ;; intercellular bonds  
   
-  ask turtles with [bonded? = 1 and count my-links = 0][
-
-    let turn? random 2 ;; whether the cell will alter it's straight-line trajectory
-    if (turn?)[
-      lt 60
-    ]
-    
-    set migrate 2.5 * s-radius
-      
-      
-    
-  ]
-
   tick
 end
 
@@ -353,7 +380,7 @@ CHOOSER
 extracel-calcium
 extracel-calcium
 "Low" "Physiological"
-0
+1
 
 BUTTON
 420
@@ -408,7 +435,7 @@ n-turtles
 n-turtles
 1
 10
-5
+1
 1
 1
 NIL
@@ -423,11 +450,30 @@ scale
 scale
 1
 100
-49
+47
 1
 1
 μm
 HORIZONTAL
+
+PLOT
+287
+293
+487
+443
+Number of cells
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot count turtles with [bonded? = true]"
+"pen-1" 1.0 0 -2674135 true "" "plot count turtles"
 
 @#$#@#$#@
 ## WHAT IS IT?
