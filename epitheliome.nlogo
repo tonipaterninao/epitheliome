@@ -267,9 +267,11 @@ to go
         [
           let other-cell self
           ask this-cell[
-            face other-cell
-            fd (d - ((self-radius + s-radius) / scale))
-            lt -135 + random 91  ;; correction of direction to avoid cells to orbit each other
+            if (can-move? (d - ((self-radius + s-radius) / scale)))[
+              face other-cell
+              fd (d - ((self-radius + s-radius) / scale))
+              lt -135 + random 91  ;; correction of direction to avoid cells to orbit each other
+            ]
           ]
         ]
 
@@ -370,8 +372,8 @@ GRAPHICS-WINDOW
 30
 -30
 30
-0
-0
+1
+1
 1
 ticks
 30.0
@@ -411,7 +413,7 @@ CHOOSER
 CELL-TYPE
 CELL-TYPE
 "keranocyte" "urothelial"
-1
+0
 
 BUTTON
 424
@@ -465,19 +467,19 @@ PLOT
 293
 783
 637
+Growth evolution
+Ticks
 Number of cells
-NIL
-NIL
 0.0
 10.0
 0.0
 10.0
 true
-false
+true
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot count turtles with [bonded? = true]"
-"pen-1" 1.0 0 -2674135 true "" "plot count turtles"
+"Total cells" 1.0 0 -2674135 true "" "plot count turtles"
+"Cells in G0" 1.0 0 -16449023 true "" "plot count turtles with [cycle-stage = 0]"
 
 BUTTON
 48
