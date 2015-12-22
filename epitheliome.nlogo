@@ -27,7 +27,6 @@ turtles-own [
   i           ;; internal counter
   migrate     ;; the migration distance calcullated for an unbound cell
   can-migrate?;; indicates whether a cell can change locations without overlap
-  dir         ;; the putative direction of a cell
 ]
 
 ;;breed[edge edges ]
@@ -58,7 +57,8 @@ to setup
   create-turtles n-turtles [setxy random-xcor random-ycor]
 
   ask turtles[
-    set shape "circle"
+    set shape "default"
+    set color 98
     set radius 20
     set s-radius radius
 
@@ -90,7 +90,7 @@ to go
   ask turtles[
     if (not bonded?)[
       set p-bonded random 101
-      ifelse( p-bonded > 50 ) [
+      ifelse( p-bonded > 20 ) [
         set bonded? true
       ]
       [set bonded? false]
@@ -213,10 +213,9 @@ to go
   ask turtles with [bonded? and count my-links = 0][
     
     let turn? random 101 ;; whether the cell will alter it's straight-line trajectory
-    set dir 0            ;; the angle the cell will turn (or not)
     
-    if (turn? > 80)[
-      set dir -30 + random 61
+    if (turn? > 50)[
+      lt -30 + random 61
     ]
     
     set migrate 2.5 * s-radius / scale
@@ -251,20 +250,21 @@ to go
   ask turtles[
 
     ;; identify potentially overlapping cells
-    let self-radius s-radius  ;; current turtle's radius
-    let this-cell self        ;; current turtle itself
+    let self-radius s-radius  ;; current cell's radius
+    let this-cell self        ;; current cell itself
     ask other turtles[
       let d distance this-cell ;; distance between the current cell and the other cell
 
       ;; if cells overlap
       if (d < ((s-radius + self-radius) / scale))[
 
-        ;; if cell is not by the edge of the medium or has any links
-        ifelse (can-move? (s-radius / scale) and count my-links = 0)
+        ;; if cell is not by the edge of the medium or has zero links
+        ifelse (can-move? (d - ((self-radius + s-radius) / scale)) and count my-links = 0)
         [
           ;; move away from current cell until no overlap
           face this-cell
           fd (d - ((self-radius + s-radius) / scale))
+          lt -135 + random 91   ;; correction to avoid cells to orbit each other
         ]
 
         ;; if other cell is by the edge of the medium, ask current cell to move instead
@@ -273,6 +273,7 @@ to go
           ask this-cell[
             face other-cell
             fd (d - ((self-radius + s-radius) / scale))
+            lt -135 + random 91  ;; correction to avoid cells to orbit each other
           ]
         ]
 
@@ -295,7 +296,7 @@ to go
       ask other turtles in-radius ((s-radius + s-radius + 10) / scale )[
         
         ;; if distance between cells is less than 10 µm -- taking into account their radius'
-        ifelse (distance self <= (this-s-radius + s-radius + 10) / scale)[
+        ifelse (distance this-cell <= (this-s-radius + s-radius + 10) / scale)[
           
           ;; if cells are not already bonded and ot in mitotic phase
           
@@ -350,7 +351,7 @@ to check-migration
   ;; determine whether there are cells overlapping the future location
   let this-radius s-radius  ;; current's cell radius
   let mig? true             ;; intermediate variable of migration
-  let future-location patch-at-heading-and-distance dir migrate
+  let future-location patch-ahead migrate
   
   ifelse(future-location = nobody)[
     set can-migrate? false
@@ -362,8 +363,8 @@ to check-migration
       ask turtles in-radius (3 * this-radius)[
         
         ;; set migrate? false if future location is within the radius of future location and of current cell
-        if (any? patches in-radius (this-radius + s-radius) = future-location)[
-          set can-migrate? false
+        if (any? patches in-radius (this-radius + s-radius) with [pxcor = [pxcor] of future-location and pycor = [pycor] of future-location])[
+          set mig? false
         ]
       ]
     ]
@@ -460,7 +461,7 @@ n-turtles
 n-turtles
 1
 10
-2
+9
 1
 1
 NIL
@@ -475,7 +476,7 @@ scale
 scale
 1
 100
-47
+12
 1
 1
 μm
