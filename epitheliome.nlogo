@@ -289,12 +289,12 @@ to go
     if (cycle-stage != 3)[
 
       ;; Look for turtles in the vicinities
-      ask other turtles in-radius ((s-radius + s-radius + 10) / scale )[
+      ask other turtles[ ;in-radius ((s-radius + s-radius + 10) / scale )[
 
         ;; if distance between cells is less than 10 µm -- taking into account their radius'
         ifelse (distance this-cell <= (this-s-radius + s-radius + 10) / scale)[
 
-          ;; if cells are not already bonded and ot in mitotic phase
+          ;; if cells are not already bonded and not in mitotic phase
 
           if ((not any? my-links with [other-end = this-cell]) and (cycle-stage != 3))[
 
@@ -343,6 +343,11 @@ to compute-cycle
   set cycle-len 2 * g1-len
 end
 
+to wound
+  ask turtles with [xcor >= -10 and xcor <= 10][
+    die
+  ]
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 877
@@ -473,6 +478,23 @@ false
 PENS
 "default" 1.0 0 -16777216 true "" "plot count turtles with [bonded? = true]"
 "pen-1" 1.0 0 -2674135 true "" "plot count turtles"
+
+BUTTON
+48
+317
+122
+350
+Wound
+wound
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
