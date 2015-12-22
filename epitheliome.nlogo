@@ -26,6 +26,8 @@ turtles-own [
   max-div     ;; the number of maximun divisions
   i           ;; internal counter
   migrate     ;; the migration distance calcullated for an unbound cell
+  can-migrate?;; indicates whether a cell can change locations without overlap
+  dir         ;; the putative direction of a cell
 ]
 
 ;;breed[edge edges ]
@@ -205,30 +207,36 @@ to go
     set label count my-links
   ]
   
-    ;; cell migration: concerns only cells bound to substrate and with no
+  ;; cell migration: concerns only cells bound to substrate and with no
   ;; intercellular bonds  
   
   ask turtles with [bonded? and count my-links = 0][
-
+    
     let turn? random 101 ;; whether the cell will alter it's straight-line trajectory
+    set dir 0            ;; the angle the cell will turn (or not)
+    
     if (turn? > 80)[
-      rt -30 + random 61
+      set dir -30 + random 61
     ]
     
     set migrate 2.5 * s-radius / scale
     
+    set can-migrate? true
+    check-migration
+    
     let n 0 ;; counter for the while loop of changing direction 
     
     ;; if cell cannot move the "migrate" distance
-    while [not can-move? migrate][
+    while [not can-migrate?][
       lt 30
       set n n + 1
       
       ; if cell turns 10 times without being able to move, remain stationary
-      if (n = 10)[
+      if (n = 9)[
         set migrate 0
         stop
       ]
+      check-migration
     ]        
   ]
   
@@ -312,18 +320,11 @@ to go
         
         ;; if distance is greater than 10 µm and there is a link between the cells, break it
         [
-          if (any? my-links with [end1 = this-cell or end2 = this-cell])[
+          if (any? my-links with [other-end = this-cell])[
             ask my-links with [other-end = this-cell][ die ]
           ]
         ]
       ]
-      
-      ;; Create bonds with edges of the world
-;      if (xcor >= max-pxcor or ycor >= max-pycor)[
-;        
-;        create-link-with patch-here
-;      ]
-
     ]
   ]
   
@@ -343,6 +344,30 @@ to compute-cycle
   set g1-len random-normal (cycle-len / 2) (cycle-len / 20)
   ;; update the new cell cycle length
   set cycle-len 2 * g1-len
+end
+
+to check-migration
+  ;; determine whether there are cells overlapping the future location
+  let this-radius s-radius  ;; current's cell radius
+  let mig? true             ;; intermediate variable of migration
+  let future-location patch-at-heading-and-distance dir migrate
+  
+  ifelse(future-location = nobody)[
+    set can-migrate? false
+  ]
+  [
+    ask future-location [
+      
+      ;; query the turtles in a radius of three times the current turtle's radius
+      ask turtles in-radius (3 * this-radius)[
+        
+        ;; set migrate? false if future location is within the radius of future location and of current cell
+        if (any? patches in-radius (this-radius + s-radius) = future-location)[
+          set can-migrate? false
+        ]
+      ]
+    ]
+  ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -435,7 +460,7 @@ n-turtles
 n-turtles
 1
 10
-1
+2
 1
 1
 NIL
