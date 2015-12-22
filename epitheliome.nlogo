@@ -35,7 +35,7 @@ turtles-own [
 to setup
   ca
   reset-ticks
-  
+
   ifelse( extracel-calcium = "Low")[
     set ex-cal 0.09
   ]
@@ -57,7 +57,7 @@ to setup
   create-turtles n-turtles [setxy random-xcor random-ycor]
 
   ask turtles[
-    set shape "default"
+    set shape "circle"
     set color 98
     set radius 20
     set s-radius radius
@@ -206,45 +206,41 @@ to go
     set size 2 * s-radius / scale
     set label count my-links
   ]
-  
+
   ;; cell migration: concerns only cells bound to substrate and with no
-  ;; intercellular bonds  
-  
+  ;; intercellular bonds
+
   ask turtles with [bonded? and count my-links = 0][
-    
+
     let turn? random 101 ;; whether the cell will alter it's straight-line trajectory
-    
+
     if (turn? > 50)[
       lt -30 + random 61
     ]
-    
+
     set migrate 2.5 * s-radius / scale
-    
-    set can-migrate? true
-    check-migration
-    
-    let n 0 ;; counter for the while loop of changing direction 
-    
+
+    let n 0 ;; counter for the while loop of changing direction
+
     ;; if cell cannot move the "migrate" distance
-    while [not can-migrate?][
+    while [not can-move? migrate][
       lt 30
       set n n + 1
-      
+
       ; if cell turns 10 times without being able to move, remain stationary
       if (n = 9)[
         set migrate 0
         stop
       ]
-      check-migration
-    ]        
+    ]
   ]
-  
-  
+
+
   ;; cell migration after distance calculation and direction modification
   ask turtles with [bonded? and count my-links = 0][
     fd migrate
   ]
-  
+
   ;; physical correction (avoid overlap)
 
   ask turtles[
@@ -273,52 +269,52 @@ to go
           ask this-cell[
             face other-cell
             fd (d - ((self-radius + s-radius) / scale))
-            lt -135 + random 91  ;; correction to avoid cells to orbit each other
+            lt -135 + random 91  ;; correction of direction to avoid cells to orbit each other
           ]
         ]
 
       ]
     ]
-  ]  
+  ]
   ;; Cell bonding
-  
+
   ask turtles[
-    
+
     ;; Probability constant calculation within 10 µm
 
     let this-cell self ;; the current cell
     let this-s-radius s-radius ;; the spread radius of current cell
-    
+
     ;; Trigger bonding calculations if current cell is not in mitotic phase
     if (cycle-stage != 3)[
-      
+
       ;; Look for turtles in the vicinities
       ask other turtles in-radius ((s-radius + s-radius + 10) / scale )[
-        
+
         ;; if distance between cells is less than 10 µm -- taking into account their radius'
         ifelse (distance this-cell <= (this-s-radius + s-radius + 10) / scale)[
-          
+
           ;; if cells are not already bonded and ot in mitotic phase
-          
-          if ((not any? my-links with [end1 = this-cell or end2 = this-cell]) and (cycle-stage != 3))[
-            
+
+          if ((not any? my-links with [other-end = this-cell]) and (cycle-stage != 3))[
+
             ;; Probability based on Baumgarter et al. (2000)
             ;; with steepness = 5
             ;; inflexion point = 1 mM
             ;; maximum = 1
-            
-            let b-probability ( 1 / ( 1 + ( exp ( -5 * ( ex-cal - 1 ) ) ) ) )         
+
+            let b-probability ( 1 / ( 1 + ( exp ( -5 * ( ex-cal - 1 ) ) ) ) )
             let threshold random-float 1
-            
-            ;; If constant is greater than random number      
+
+            ;; If constant is greater than random number
             if (b-probability > threshold)[
-              
+
               ;; create a bond between both cells
               create-link-with this-cell
             ]
           ]
         ]
-        
+
         ;; if distance is greater than 10 µm and there is a link between the cells, break it
         [
           if (any? my-links with [other-end = this-cell])[
@@ -328,8 +324,8 @@ to go
       ]
     ]
   ]
-  
-  
+
+
   tick
 end
 
@@ -347,35 +343,12 @@ to compute-cycle
   set cycle-len 2 * g1-len
 end
 
-to check-migration
-  ;; determine whether there are cells overlapping the future location
-  let this-radius s-radius  ;; current's cell radius
-  let mig? true             ;; intermediate variable of migration
-  let future-location patch-ahead migrate
-  
-  ifelse(future-location = nobody)[
-    set can-migrate? false
-  ]
-  [
-    ask future-location [
-      
-      ;; query the turtles in a radius of three times the current turtle's radius
-      ask turtles in-radius (3 * this-radius)[
-        
-        ;; set migrate? false if future location is within the radius of future location and of current cell
-        if (any? patches in-radius (this-radius + s-radius) with [pxcor = [pxcor] of future-location and pycor = [pycor] of future-location])[
-          set mig? false
-        ]
-      ]
-    ]
-  ]
-end
 @#$#@#$#@
 GRAPHICS-WINDOW
-789
-10
-1279
-521
+877
+17
+1367
+528
 30
 30
 7.87
@@ -433,7 +406,7 @@ CHOOSER
 CELL-TYPE
 CELL-TYPE
 "keranocyte" "urothelial"
-0
+1
 
 BUTTON
 424
@@ -476,7 +449,7 @@ scale
 scale
 1
 100
-12
+26
 1
 1
 μm
@@ -485,8 +458,8 @@ HORIZONTAL
 PLOT
 287
 293
-487
-443
+783
+637
 Number of cells
 NIL
 NIL
@@ -844,7 +817,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.2.0
+NetLogo 5.3
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
