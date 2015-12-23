@@ -26,7 +26,6 @@ turtles-own [
   max-div     ;; the number of maximun divisions
   i           ;; internal counter
   migrate     ;; the migration distance calcullated for an unbound cell
-  can-migrate?;; indicates whether a cell can change locations without overlap
 ]
 
 ;;breed[edge edges ]
