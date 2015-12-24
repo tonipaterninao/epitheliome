@@ -224,7 +224,11 @@ to go
             set color 58
             rt random 361
             fd 2 * s-radius / scale ;; take into the account the scaled radius
-            compute-cycle
+            ifelse (n-div < max-div)[                        ;; for cells that are still able to divide
+              set cycle-stage 1                              ;; keep growing and dividing
+              compute-cycle                                  
+            ]
+            [ set cycle-stage 0 ]                            ;; otherwise enter a quiescent state (post-mitotic)
           ]
         ]
       ]
@@ -453,7 +457,7 @@ CHOOSER
 CELL-TYPE
 CELL-TYPE
 "keranocyte" "urothelial"
-1
+0
 
 BUTTON
 424
