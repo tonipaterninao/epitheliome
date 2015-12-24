@@ -2,6 +2,13 @@ globals[
   ex-cal ; the extra-cellular calcium concentration in mM
 ]
 
+;; the stem cell cellular type
+breed [ stem-cells stem-cell ]
+
+;; the Transit Amplifying cellular type
+breed [ TA-cells TA-cell ]
+
+
 patches-own [
   cal ; The extra-cellular calcium concentration as color code
 ]
@@ -23,13 +30,14 @@ turtles-own [
               ;; 120 for keranocyte / 30 for utothelial
   g1-len      ;; length of G1 stage
   n-bonded    ;; the number of establihed bonds
-  max-div     ;; the number of maximun divisions
   i           ;; internal counter
-  migrate     ;; the migration distance calcullated for an unbound cell
+  migrate     ;; the migration distance calculated for an unbound cell
+  n-div       ;; the number of divisions carried out so far by a cell
 ]
 
-;;breed[edge edges ]
-
+TA-cells-own [
+  max-div     ;; maximum number fo divisions of a TA cell
+]
 
 to setup
   ca
@@ -53,11 +61,23 @@ to setup
 
   ;; Set up the cell's properties
 
-  create-turtles n-turtles [setxy random-xcor random-ycor]
+  create-stem-cells 0.1 * n-turtles [setxy random-xcor random-ycor]
+  create-TA-cells 0.9 * n-turtles [
+    setxy random-xcor random-ycor
+    
+    ;; set the maximum number of cell divisions for TA cells according to cell type
+    ifelse (CELL-TYPE = "keranocyte")[
+      set max-div 3
+    ]
+    [ set max-div 30 ]
+  ]
 
   ask turtles[
     set shape "circle"
-    set color 98
+    ifelse ( [breed] of self = stem-cells )[
+      set color 18
+    ]
+    [ set color 58 ]
     set radius 20
     set s-radius radius
 
@@ -371,8 +391,8 @@ GRAPHICS-WINDOW
 30
 -30
 30
-1
-1
+0
+0
 1
 ticks
 30.0
@@ -412,7 +432,7 @@ CHOOSER
 CELL-TYPE
 CELL-TYPE
 "keranocyte" "urothelial"
-0
+1
 
 BUTTON
 424
@@ -440,7 +460,7 @@ n-turtles
 n-turtles
 1
 10
-9
+10
 1
 1
 NIL
@@ -462,12 +482,12 @@ scale
 HORIZONTAL
 
 PLOT
-287
-293
-783
-637
+292
+169
+788
+513
 Growth evolution
-Ticks
+Ticks ( x 30 min)
 Number of cells
 0.0
 10.0
@@ -840,7 +860,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.3
+NetLogo 5.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
