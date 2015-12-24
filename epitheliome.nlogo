@@ -64,11 +64,11 @@ to setup
 
   create-stem-cells 0.1 * n-turtles [
     setxy random-xcor random-ycor
-    set max-div -1                ;; indefinite number of divisions (n-div < max-div always false)
+    set max-div -1                ;; indefinite number of divisions (max-div = n-div always false)
     ]
   create-TA-cells 0.9 * n-turtles [
     setxy random-xcor random-ycor
-    
+
     ;; set the maximum number of cell divisions for TA cells according to cell type
     ifelse (CELL-TYPE = "keranocyte")[
       set max-div 3
@@ -133,15 +133,19 @@ to go
     [
       ;; cell is in G0
       if (cycle-stage = 0) [
-        
+
         ;; conditions for TA-cells
         ifelse ([breed] of self = "TA-cells")[
-          
-          ;; if bonds are broken or sufficiently spread enter G1 **(only possible if max-div not reached)**
-          if ((count my-links < 4 or s-radius / radius >= 1.5) and n-div < max-div)[
-            set cycle-stage 1
+          ;; **(only possible if max-div not reached)**
+          ifelse (max-div != n-div)[
+            ;; if bonds are broken or sufficiently spread enter G1
+            if (count my-links < 4 or s-radius / radius >= 1.5)[
+              set cycle-stage 1
+            ]
           ]
+          [ set cycle-stage 0 ]
         ]
+
         ;; conditions for stem cells
         [
           ;; if bonds are broken or sufficiently spread enter G1
@@ -209,26 +213,34 @@ to go
           set i 0                                          ;; restart counter
           set bonded? false                                ;; restart bonding to substrate
           set n-div n-div + 1                              ;; update number of divisions
-          
+
           ;; update cell cycle phase
-          ifelse (n-div < max-div)[                        ;; for cells that are still able to divide
-            set cycle-stage 1                              ;; keep growing and dividing
-            compute-cycle                                  
+          ifelse (max-div = n-div)[                        ;; for cells that have reached the maximum number of divisions
+            set cycle-stage 0                              ;; otherwise enter a quiescent state (post-mitotic)
           ]
-          [ set cycle-stage 0 ]                            ;; otherwise enter a quiescent state (post-mitotic)
- 
+          [
+            set cycle-stage 1                              ;; keep growing and dividing
+            compute-cycle
+          ]
+
           ;; create 2nd daughter cell
           ;; will always be TA-cell independently of mother cell breed
           hatch-TA-cells 1 [
             set shape "circle"
             set color 58
             rt random 361
-            fd 2 * s-radius / scale ;; take into the account the scaled radius
-            ifelse (n-div < max-div)[                        ;; for cells that are still able to divide
-              set cycle-stage 1                              ;; keep growing and dividing
-              compute-cycle                                  
+            ifelse (CELL-TYPE = "keranocyte")[
+              set max-div 3
             ]
-            [ set cycle-stage 0 ]                            ;; otherwise enter a quiescent state (post-mitotic)
+            [ set max-div 30 ]
+            ;; update cell cycle phase
+            ifelse (max-div = n-div)[                        ;; for cells that have reached the maximum number of divisions
+              set cycle-stage 0                              ;; otherwise enter a quiescent state (post-mitotic)
+            ]
+            [
+              set cycle-stage 1                              ;; keep growing and dividing
+              compute-cycle
+            ]
           ]
         ]
       ]
@@ -368,9 +380,9 @@ to go
       ]
     ]
   ]
-  
+
   ask turtles[
-    set label cycle-stage
+    set label n-div
   ]
   tick
 end
@@ -885,7 +897,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.2.0
+NetLogo 5.3
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
