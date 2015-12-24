@@ -33,10 +33,11 @@ turtles-own [
   i           ;; internal counter
   migrate     ;; the migration distance calculated for an unbound cell
   n-div       ;; the number of divisions carried out so far by a cell
+  max-div     ;; maximum number of divisions of a cell
 ]
 
 TA-cells-own [
-  max-div     ;; maximum number fo divisions of a TA cell
+
 ]
 
 to setup
@@ -61,7 +62,10 @@ to setup
 
   ;; Set up the cell's properties
 
-  create-stem-cells 0.1 * n-turtles [setxy random-xcor random-ycor]
+  create-stem-cells 0.1 * n-turtles [
+    setxy random-xcor random-ycor
+    set max-div -1                ;; indefinite number of divisions (n-div < max-div always false)
+    ]
   create-TA-cells 0.9 * n-turtles [
     setxy random-xcor random-ycor
     
@@ -129,10 +133,21 @@ to go
     [
       ;; cell is in G0
       if (cycle-stage = 0) [
-
-        ;; if bonds are broken or sufficiently spread enter G1
-        if (count my-links < 4 or s-radius / radius >= 1.5)[
-          set cycle-stage 1
+        
+        ;; conditions for TA-cells
+        ifelse ([breed] of self = "TA-cells")[
+          
+          ;; if bonds are broken or sufficiently spread enter G1 **(only possible if max-div not reached)**
+          if ((count my-links < 4 or s-radius / radius >= 1.5) and n-div < max-div)[
+            set cycle-stage 1
+          ]
+        ]
+        ;; conditions for stem cells
+        [
+          ;; if bonds are broken or sufficiently spread enter G1
+          if (count my-links < 4 or s-radius / radius >= 1.5)[
+            set cycle-stage 1
+          ]
         ]
       ]
 
@@ -172,10 +187,9 @@ to go
 
         ;; if G2/M boundary
         if (i > 0.8 * cycle-len)[
+          ask my-links[die]   ;; break all bonds
           set cycle-stage 3   ;; update cycle phase
-          set s-radius radius ;; turn spheric
-          set n-bonded 0      ;; break all bonds
-          ask my-links[die]
+
         ]
       ]
 
@@ -192,20 +206,26 @@ to go
           set volume volume / 2                            ;; reduce the volume by half
           set radius ( volume * 3 / (4 * pi) ) ^ ( 1 / 3 ) ;; update radius
           set s-radius radius                              ;; update apparent radius
-          set cycle-stage 1                                ;; update cell cycle phase
           set i 0                                          ;; restart counter
           set bonded? false                                ;; restart bonding to substrate
-
-          ;; re-compute cell cycle length
-          compute-cycle
-
-          ;;create 2nd daughter cell
-          hatch 1 [
-           rt random 361
-           fd 2 * s-radius / scale ;; take into the account the scaled radius
-           compute-cycle
+          set n-div n-div + 1                              ;; update number of divisions
+          
+          ;; update cell cycle phase
+          ifelse (n-div < max-div)[                        ;; for cells that are still able to divide
+            set cycle-stage 1                              ;; keep growing and dividing
+            compute-cycle                                  
           ]
-
+          [ set cycle-stage 0 ]                            ;; otherwise enter a quiescent state (post-mitotic)
+ 
+          ;; create 2nd daughter cell
+          ;; will always be TA-cell independently of mother cell breed
+          hatch-TA-cells 1 [
+            set shape "circle"
+            set color 58
+            rt random 361
+            fd 2 * s-radius / scale ;; take into the account the scaled radius
+            compute-cycle
+          ]
         ]
       ]
     ]
@@ -223,13 +243,12 @@ to go
   ;; update turtles shape according to growth and spreading
   ask turtles [
     set size 2 * s-radius / scale
-    set label count my-links
   ]
 
   ;; cell migration: concerns only cells bound to substrate and with no
   ;; intercellular bonds
 
-  ask turtles with [bonded? and count my-links = 0][
+  ask turtles with [bonded? and (count my-links = 0) and (cycle-stage != 3)][
 
     let turn? random 101 ;; whether the cell will alter it's straight-line trajectory
 
@@ -256,7 +275,7 @@ to go
 
 
   ;; cell migration after distance calculation and direction modification
-  ask turtles with [bonded? and count my-links = 0][
+  ask turtles with [bonded? and (count my-links = 0) and (cycle-stage != 3)][
     fd migrate
   ]
 
@@ -345,8 +364,10 @@ to go
       ]
     ]
   ]
-
-
+  
+  ask turtles[
+    set label cycle-stage
+  ]
   tick
 end
 
@@ -458,9 +479,9 @@ SLIDER
 219
 n-turtles
 n-turtles
-1
 10
-10
+100
+50
 1
 1
 NIL
@@ -475,7 +496,7 @@ scale
 scale
 1
 100
-26
+20
 1
 1
 μm
