@@ -93,7 +93,7 @@ to setup
 
     ;;set volume and compute dv
     set volume 4 / 3 * pi * radius ^ 3
-    set dv volume / (2 * g1-len)
+    set dv volume / cycle-len
 
     set bonded? false
     set p-bonded 0
@@ -135,15 +135,14 @@ to go
       if (cycle-stage = 0) [
 
         ;; conditions for TA-cells
-        ifelse ([breed] of self = "TA-cells")[
+        ifelse ([breed] of self = TA-cells)[
           ;; **(only possible if max-div not reached)**
-          ifelse (max-div != n-div)[
+          if (max-div != n-div)[
             ;; if bonds are broken or sufficiently spread enter G1
             if (count my-links < 4 or s-radius / radius >= 1.5)[
               set cycle-stage 1
             ]
           ]
-          [ set cycle-stage 0 ]
         ]
 
         ;; conditions for stem cells
@@ -226,6 +225,7 @@ to go
           ;; create 2nd daughter cell
           ;; will always be TA-cell independently of mother cell breed
           hatch-TA-cells 1 [
+            ;;set breed TA-cells
             set shape "circle"
             set color 58
             rt random 361
@@ -235,10 +235,10 @@ to go
             [ set max-div 30 ]
             ;; update cell cycle phase
             ifelse (max-div = n-div)[                        ;; for cells that have reached the maximum number of divisions
-              set cycle-stage 0                              ;; otherwise enter a quiescent state (post-mitotic)
+              set cycle-stage 0                              ;; enter a quiescent state (post-mitotic)
             ]
             [
-              set cycle-stage 1                              ;; keep growing and dividing
+              set cycle-stage 1                              ;; otherwise keep growing and dividing
               compute-cycle
             ]
           ]
@@ -249,7 +249,6 @@ to go
 
   ;; spread only if spread radius is less than 1.5X radius and not in mitotic state
   ask turtles[
-
     if (s-radius / radius < 1.5 and cycle-stage != 3 and bonded?)[
       set s-radius s-radius + 1
     ]
@@ -497,7 +496,7 @@ n-turtles
 n-turtles
 10
 100
-50
+10
 1
 1
 NIL
