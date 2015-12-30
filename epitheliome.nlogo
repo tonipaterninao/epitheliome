@@ -6,7 +6,7 @@ globals[
 breed [ stem-cells stem-cell ]
 
 ;; the Transit Amplifying cellular type
-breed [ TA-cells TA-cell ]
+breed [ ta-cells ta-cell ]
 
 
 patches-own [
@@ -36,10 +36,6 @@ turtles-own [
   max-div     ;; maximum number of divisions of a cell
 ]
 
-TA-cells-own [
-
-]
-
 to setup
   ca
   reset-ticks
@@ -64,9 +60,9 @@ to setup
 
   create-stem-cells 0.1 * n-turtles [
     setxy random-xcor random-ycor
-    set max-div -1                ;; indefinite number of divisions (max-div = n-div always false)
+    set max-div 1e99                ;; virtually indefinite number of divisions (max-div > n-div always true)
     ]
-  create-TA-cells 0.9 * n-turtles [
+  create-ta-cells 0.9 * n-turtles [
     setxy random-xcor random-ycor
 
     ;; set the maximum number of cell divisions for TA cells according to cell type
@@ -134,10 +130,10 @@ to go
       ;; cell is in G0
       if (cycle-stage = 0) [
 
-        ;; conditions for TA-cells
-        ifelse ([breed] of self = TA-cells)[
+        ;; conditions for ta-cells
+        ifelse ([breed] of self = ta-cells)[
           ;; **(only possible if max-div not reached)**
-          if (max-div != n-div)[
+          if (max-div > n-div)[
             ;; if bonds are broken or sufficiently spread enter G1
             if (count my-links < 4 or s-radius / radius >= 1.5)[
               set cycle-stage 1
@@ -214,7 +210,7 @@ to go
           set n-div n-div + 1                              ;; update number of divisions
 
           ;; update cell cycle phase
-          ifelse (max-div = n-div)[                        ;; for cells that have reached the maximum number of divisions
+          ifelse (max-div > n-div)[                        ;; for cells that have reached the maximum number of divisions
             set cycle-stage 0                              ;; otherwise enter a quiescent state (post-mitotic)
           ]
           [
@@ -223,9 +219,9 @@ to go
           ]
 
           ;; create 2nd daughter cell
-          ;; will always be TA-cell independently of mother cell breed
-          hatch-TA-cells 1 [
-            ;;set breed TA-cells
+          ;; will always be ta-cell independently of mother cell breed
+          hatch-ta-cells 1 [
+            set breed ta-cells
             set shape "circle"
             set color 58
             rt random 361
@@ -234,7 +230,7 @@ to go
             ]
             [ set max-div 30 ]
             ;; update cell cycle phase
-            ifelse (max-div = n-div)[                        ;; for cells that have reached the maximum number of divisions
+            ifelse (max-div > n-div)[                        ;; for cells that have reached the maximum number of divisions
               set cycle-stage 0                              ;; enter a quiescent state (post-mitotic)
             ]
             [
@@ -441,7 +437,7 @@ CHOOSER
 extracel-calcium
 extracel-calcium
 "Low" "Physiological"
-1
+0
 
 BUTTON
 420
@@ -468,7 +464,7 @@ CHOOSER
 CELL-TYPE
 CELL-TYPE
 "keranocyte" "urothelial"
-0
+1
 
 BUTTON
 424
@@ -496,7 +492,7 @@ n-turtles
 n-turtles
 10
 100
-10
+50
 1
 1
 NIL
@@ -511,7 +507,7 @@ scale
 scale
 1
 100
-20
+41
 1
 1
 μm
