@@ -446,7 +446,7 @@ CHOOSER
 extracel-calcium
 extracel-calcium
 "Low" "Physiological"
-0
+1
 
 BUTTON
 420
