@@ -51,7 +51,7 @@ to setup
     ifelse(extracel-calcium = "Low")[
       set cal 49
     ]
-    [ set cal 45]
+    [ set cal 46]
 
     set pcolor cal
   ]
@@ -97,8 +97,8 @@ to setup
     set cycle-stage 1
     set i 0
 
-    set label-color 0
-    set label cycle-stage
+;    set label-color 0
+;    set label cycle-stage
   ]
 
 end
@@ -218,12 +218,21 @@ to go
             compute-cycle
           ]
 
+          ;; store the breed fo mother cell
+          let breed-mother [breed] of self
+
           ;; create 2nd daughter cell
           ;; will always be ta-cell independently of mother cell breed
           hatch-ta-cells 1 [
-            set breed ta-cells
+            ;;set breed ta-cells
             set shape "circle"
-            set color 58
+            ;; this color configuration will help distinguish the origin of TA cells
+            ifelse (breed-mother = stem-cells)[
+              set color 98 ;; blue if mother cell was stem cell
+            ]
+            [ set color 58 ] ;; green otherwise
+
+            set breed ta-cells
             rt random 361
             ifelse (CELL-TYPE = "keranocyte")[
               set max-div 3
@@ -340,7 +349,7 @@ to go
     if (cycle-stage != 3)[
 
       ;; Look for turtles in the vicinities
-      ask other turtles[ ;in-radius ((s-radius + s-radius + 10) / scale )[
+      ask other turtles[
 
         ;; if distance between cells is less than 10 µm -- taking into account their radius'
         ifelse (distance this-cell <= (this-s-radius + s-radius + 10) / scale)[
@@ -376,13 +385,13 @@ to go
     ]
   ]
 
-  ask turtles[
-    set label n-div
-  ]
+;  ask turtles[
+;    set label n-div
+;  ]
   tick
 end
 
-;; procedure that increases radius by cell spreading
+;; procedure that calculates the total cell cycle length according to a normal distribution
 
 to compute-cycle
   ifelse (CELL-TYPE = "keranocyte")[
@@ -507,7 +516,7 @@ scale
 scale
 1
 100
-41
+30
 1
 1
 μm
@@ -531,6 +540,8 @@ true
 PENS
 "Total cells" 1.0 0 -2674135 true "" "plot count turtles"
 "Cells in G0" 1.0 0 -16449023 true "" "plot count turtles with [cycle-stage = 0]"
+"Number of cell bonds" 1.0 0 -13840069 true "" ";plot count links"
+"TA-cells hatche dfrom stem cells" 1.0 0 -13791810 true "" "plot count ta-cells with [color = 98]"
 
 BUTTON
 48
