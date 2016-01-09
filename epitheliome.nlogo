@@ -446,7 +446,7 @@ CHOOSER
 extracel-calcium
 extracel-calcium
 "Low" "Physiological"
-1
+0
 
 BUTTON
 420
@@ -538,10 +538,9 @@ true
 true
 "" ""
 PENS
-"Total cells" 1.0 0 -2674135 true "" "plot count turtles"
-"Cells in G0" 1.0 0 -16449023 true "" "plot count turtles with [cycle-stage = 0]"
-"Number of cell bonds" 1.0 0 -13840069 true "" ";plot count links"
-"TA-cells hatche dfrom stem cells" 1.0 0 -13791810 true "" "plot count ta-cells with [color = 98]"
+"Total cells" 1.0 0 -2674135 true "" ";plot count turtles"
+"Cells in G0" 1.0 0 -16449023 true "" ";plot count turtles with [cycle-stage = 0]"
+"Cells in wound" 1.0 0 -11033397 true "" "plot count turtles with [xcor < 10 and xcor > -10 ]"
 
 BUTTON
 48
@@ -559,6 +558,17 @@ NIL
 NIL
 NIL
 1
+
+MONITOR
+47
+364
+157
+409
+Number of cells
+count turtles
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
