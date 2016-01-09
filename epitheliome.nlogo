@@ -446,7 +446,7 @@ CHOOSER
 extracel-calcium
 extracel-calcium
 "Low" "Physiological"
-0
+1
 
 BUTTON
 420
@@ -538,8 +538,8 @@ true
 true
 "" ""
 PENS
-"Total cells" 1.0 0 -2674135 true "" ";plot count turtles"
-"Cells in G0" 1.0 0 -16449023 true "" ";plot count turtles with [cycle-stage = 0]"
+"Total cells" 1.0 0 -2674135 true "" "plot count turtles"
+"Cells in G0" 1.0 0 -16449023 true "" "plot count turtles with [cycle-stage = 0]"
 "Cells in wound" 1.0 0 -11033397 true "" "plot count turtles with [xcor < 10 and xcor > -10 ]"
 
 BUTTON
