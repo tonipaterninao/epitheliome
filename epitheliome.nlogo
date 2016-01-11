@@ -22,14 +22,11 @@ turtles-own [
   dv          ;; the growing rate (differential of volume)
   p-bonded    ;; determines the probability of a cell to bond to the substrate
   bonded?     ;; determines whether a cell is bonded to the substrate
-  spreaded?   ;; determines whether a cell spreaded in the current iteration
-  sep         ;; separation with other cells
   cycle-stage ;; determines at which stage of the cell cycle the cell is
               ;; G0 = 0 / G1 = 1 / S-G2 = 3 / M = 4
   cycle-len   ;; length of the cell cycle (in ticks)
               ;; 120 for keranocyte / 30 for utothelial
   g1-len      ;; length of G1 stage
-  n-bonded    ;; the number of establihed bonds
   i           ;; internal counter
   migrate     ;; the migration distance calculated for an unbound cell
   n-div       ;; the number of divisions carried out so far by a cell
@@ -81,7 +78,7 @@ to setup
     set radius 20
     set s-radius radius
 
-    ;; scaling the size to 1:10
+    ;; scaling the size
     set size 2 * radius / scale
 
     ;; setting cell cycle and G1 phase length
@@ -224,7 +221,7 @@ to go
           ;; create 2nd daughter cell
           ;; will always be ta-cell independently of mother cell breed
           hatch-ta-cells 1 [
-            ;;set breed ta-cells
+
             set shape "circle"
             ;; this color configuration will help distinguish the origin of TA cells
             ifelse (breed-mother = stem-cells)[
@@ -232,7 +229,6 @@ to go
             ]
             [ set color 58 ] ;; green otherwise
 
-            set breed ta-cells
             rt random 361
             ifelse (CELL-TYPE = "keranocyte")[
               set max-div 3
@@ -385,9 +381,10 @@ to go
     ]
   ]
 
-;  ask turtles[
-;    set label n-div
-;  ]
+  ask turtles [
+    set label n-div
+  ]
+
   tick
 end
 
@@ -432,8 +429,8 @@ GRAPHICS-WINDOW
 30
 -30
 30
-0
-0
+1
+1
 1
 ticks
 30.0
@@ -446,7 +443,7 @@ CHOOSER
 extracel-calcium
 extracel-calcium
 "Low" "Physiological"
-1
+0
 
 BUTTON
 420
@@ -473,7 +470,7 @@ CHOOSER
 CELL-TYPE
 CELL-TYPE
 "keranocyte" "urothelial"
-1
+0
 
 BUTTON
 424
@@ -501,17 +498,17 @@ n-turtles
 n-turtles
 10
 100
-50
+100
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-45
-247
-217
-280
+38
+248
+210
+281
 scale
 scale
 1
@@ -540,7 +537,7 @@ true
 PENS
 "Total cells" 1.0 0 -2674135 true "" "plot count turtles"
 "Cells in G0" 1.0 0 -16449023 true "" "plot count turtles with [cycle-stage = 0]"
-"Cells in wound" 1.0 0 -11033397 true "" "plot count turtles with [xcor < 10 and xcor > -10 ]"
+"Cells in wound" 1.0 0 -11033397 true "" ";plot count turtles with [xcor < 10 and xcor > -10 ]"
 
 BUTTON
 48
@@ -913,7 +910,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.3
+NetLogo 5.2.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
